@@ -1,46 +1,43 @@
-# Screenshot
-![](docs/screenshot.png)
+# Indicadores y pesos de documentos PDF
+Este repositorio cuenta con una aplicación construida en Node JS con el framework Express, donde consulta API de Crossref, Springer, IEEE, Elsevier a través de su DOI, para poder recuperar información de metadatos y que sean contrastados con métricas que permitan saber el peso de relevancia de dicho documento.
 
-### Installation
+Adicionalmente, son leídos los PDF, para poder extraer su contenido y aplicar fórmulas de métricas de compresión de lectura, léxico, imágenes, tablas, entre otros.
 
-clone the repo
+Este es un aplicativo de modo investigativo para identificar la relevancia de documentos académicos de revistas como Springer, IEEE, Elsevier, ACM.
 
-```
-git clone https://github.com/FaztWeb/first-node-express-app
-```
+## Installation
 
-move to the folder
+Clona el repositorio
 
 ```
-cd first-node-express-app
+git clone https://github.com/fabiomedinamedina/indicadores-y-pesos-docs.git
 ```
 
-install dependencies:
+Ir al directorio
+```
+cd indicadores-y-pesos-docs
+```
 
+Instalar las dependencias
 ```
 npm install
 ```
 
-execute the project
-
+Ejecutar el aplicativo (Elige alguno de los dos comandos)
 ```
 npm run dev
+npm nodemon
 ```
 
+## Tecnologías
+- Node JS
+- Express JS
 
-# Your First Nodejs/Express Website
-This is the repository of a very simple nodejs real project
-The goal of this code, is that you understand all the code
-and the reason Why I choose certain modules.
+### Dependencias
+- Axios
+- Parse CSV
+- PDF Extract
 
-# You will learn
-- How to start a nodejs project
-- How to create routes for your server application
-- How to use a template engine like ejs, handlebars, pug, etc.
-- Call Assets from CDNs and use static files
-- Divide content using partials feature from Template engines
-- Deploy our app using a simple service called Now(A service from Zeit Company)
-
-# Issues
-For any problem that you find, open an issue here on github or if
-native language is Spanish join us on [Discord](https://discord.gg/37PHuNw)
+## Autores
+- [Fabio Medina Medina](https://www.fabiomedina.com "Fabio Medina Medina")
+- Diana Suarez
