@@ -11,6 +11,7 @@ const axios = require('axios').default;
 const pdf = require('pdf-extraction');
 PDFParser = require("pdf2json");
 const csv = require('csv-parser');
+const csvtojson = require('csvtojson');
 
 
 // router.get('/', (req, res) => {
@@ -46,39 +47,46 @@ router.get('/', async (req, res) => {
   // const dois = await getDois('./docs/dois.csv');
   // console.log('prueba');
   
-  try {
-    const {data} = await axios.get(`https://api.crossref.org/works/${ doi }`);
-    const json = {
-      titulo: data.message.title,
-      autores: data.message.author
-    }
-    res.json({
-      status: 200,
-      doi: json
-    })
-  } catch (error) {
-    res.json({
-      status: 100,
-      doi: error
-    })
+  const doisJSON = await getJson('./docs/dois.csv');
+  let arrayDatas = [];
+  for (i = 0; i < doisJSON.length; i++){
+    const {DOI} = doisJSON[i];
+    const information = await getInfo(DOI);
+    arrayDatas.push(information);
   }
- 
+  
+  res.json(arrayDatas);
+   
 });
 
-const getDois = (ruta) => {
-  let dois = [];
-  fs.createReadStream(ruta)
-    .pipe(csv())
-    .on('data', ({DOI}) => {
-      dois.push(DOI);
-    })
-    .on('end', () => {
-      console.log('CSV file successfully processed');
-      console.log(dois)
-      return dois;
-    });  
+const getJson = async (rutaCSV) => {
+  const resJson = await csvtojson().fromFile(rutaCSV);
+  // const jsonArray =  await resJson.json();
+  return resJson;
 }
 
+const getInfo = async (doi) => {
+  const { data } = await axios.get(`https://api.crossref.org/works/${ doi }`);
+  // const { message } = data;
+  // console.log(message.title);
+  
+  // return message.title;
+  try {
+    const { data } = await axios.get(`https://api.crossref.org/works/${ doi }`);
+    const { message } = data;
+    const json = {
+      status: 'OK',
+      titulo: message.title,
+      autores: message.author
+    }
+    return (json);
+  } catch (error) {
+    return ({
+      status: 'Error',
+      error
+    });
+  } 
+}
 
 
 module.exports = router;
