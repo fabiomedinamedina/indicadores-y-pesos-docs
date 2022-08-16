@@ -11,6 +11,7 @@ const axios = require('axios').default;
 const pdf = require('pdf-extraction');
 PDFParser = require("pdf2json");
 const csv = require('csv-parser');
+const csvtojson = require('csvtojson');
 
 
 // router.get('/', (req, res) => {
@@ -46,39 +47,98 @@ router.get('/', async (req, res) => {
   // const dois = await getDois('./docs/dois.csv');
   // console.log('prueba');
   
-  try {
-    const {data} = await axios.get(`https://api.crossref.org/works/${ doi }`);
-    const json = {
-      titulo: data.message.title,
-      autores: data.message.author
-    }
-    res.json({
-      status: 200,
-      doi: json
-    })
-  } catch (error) {
-    res.json({
-      status: 100,
-      doi: error
-    })
+  const doisJSON = await getJson('./docs/dois.csv');
+  let arrayDatas = [];
+  for (i = 0; i < doisJSON.length; i++){
+    const {DOI} = doisJSON[i];
+    const information = await getInfo(DOI);
+    arrayDatas.push(information);
   }
- 
+  
+  res.json(arrayDatas);
+   
 });
 
-const getDois = (ruta) => {
-  let dois = [];
-  fs.createReadStream(ruta)
-    .pipe(csv())
-    .on('data', ({DOI}) => {
-      dois.push(DOI);
-    })
-    .on('end', () => {
-      console.log('CSV file successfully processed');
-      console.log(dois)
-      return dois;
-    });  
+const getJson = async (rutaCSV) => {
+  const resJson = await csvtojson().fromFile(rutaCSV);
+  // const jsonArray =  await resJson.json();
+  return resJson;
+}
+
+const getInfo = async (doi) => {
+  // const { data } = await axios.get(`https://api.crossref.org/works/${ doi }`);
+  // const { message } = data;
+  // console.log(message.title);
+  
+  // return message.title;
+  try {
+    const { data } = await axios.get(`https://api.crossref.org/works/${ doi }`);
+    const { publisher, author, title, published, abstract, link, URL } = data.message;
+    const value = 3.76
+    const json = {
+      status: 'OK',
+      ID: doi,
+      DOI: 3.76,
+      publisher: await requestPublisher(publisher.toLowerCase(), doi),
+      autores: (author.length > 0 ) ? value : 0,
+      titulo: (title.toString() !== "") ? value : 0,
+      anio: (published['date-parts'].toString() !== "") ? value : 0,
+      resumen: ( abstract !== "" ) ? value : 0,
+      URL: ( URL !== "" ) ? value : 0,
+      URI: (link.length > 0 ) ? value : 0,
+      versions: (link.length > 0 ) ? value : 0
+    }
+
+    const values = Object.values(json);
+    json.total = values.filter(x => x==value).length
+    return (json);
+  } catch (error) {
+    return ({
+      status: 'Error',
+      ID: doi,
+      error
+    });
+  } 
+}
+
+const requestPublisher = async ( publisher, doi ) => {
+  switch (true) {
+    case publisher.includes('ieee'):
+      // const d = await getIEEE(doi);
+      // console.log(d);
+      // return d;
+      try {
+        const key = '52et3s479vwknzu2acuemvh6';
+        const {data} = await axios.get(`http://ieeexploreapi.ieee.org/api/v1/search/articles?apikey=${ key }&format=json&max_records=25&start_record=1&sort_order=asc&sort_field=article_number&doi=${ doi }`);
+        const { articles } = data;
+        return articles[0].access_type;
+      } catch (error) {
+        return 'errir';
+      }
+
+      
+
+    case publisher.includes('elsevier'):
+    
+      return 'Elsevier';
+  
+    case publisher.includes('springer'):
+  
+      return 'Springer';
+  
+    default:
+      return 'Default';
+  }
 }
 
 
+const getIEEE = async ( doi ) => {
+  
+  const key = '52et3s479vwknzu2acuemvh6';
+
+  const { articles } = await axios.get(`http://ieeexploreapi.ieee.org/api/v1/search/articles?apikey=${ key }&format=json&max_records=25&start_record=1&sort_order=asc&sort_field=article_number&doi=${doi}`);
+  return articles[0];
+
+}
 
 module.exports = router;
